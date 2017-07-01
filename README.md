@@ -35,12 +35,14 @@ e.g. `oracle-8` or `openjdk-9`
 ``` yaml
 - hosts: all
   roles:
+    # Installs openjdk-8-jre by default
     - role: ansible-role-java
 ```
 
 ``` yaml
 - hosts: all
   roles:
+    # Installs openjdk-8-jdk
     - role: ansible-role-java
       install_type: "jdk"
 
@@ -81,7 +83,7 @@ Any Oracle versions of Java are **JDK** by default (JDK also includes includes J
 
 If installing multiple versions of Java, last one installed is set as default unless specified
 
-> \* openjdk-6 is not supported on Ubuntu 16.04 Xenial
+`openjdk-6` is not supported on Ubuntu 16.04 Xenial
 
 
 
