@@ -10,14 +10,14 @@
   apt:
     name: default-jre
     force: yes
-  when: '(install_type == "jre") and (java_version | length == 0)'
+  when: '(install_type == "jre") and (java_version == "default")'
   become: true
 
 - name: Install default-jdk
   apt:
     name: default-jdk
     force: yes
-  when: '(install_type == "jdk") and (java_version | length == 0)'
+  when: '(install_type == "jdk") and (java_version == "default")'
   become: true
 
 # Oracle JDK
