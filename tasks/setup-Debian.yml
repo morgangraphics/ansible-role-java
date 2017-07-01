@@ -66,6 +66,7 @@
 
   when: '(java_version != "default") and ("open" in java_version)'
 
+# Set Default Java Version
 - block:
 
   - name: Set Java Versions
