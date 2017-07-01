@@ -1,0 +1,14 @@
+---
+# JRE or JDK
+# JDK has a larger footprint therefore jre is the default
+install_type: "jre"
+
+# Version of Java to install
+# Options are:
+# default (OpenJDK-8)
+# openjdk-{VERSION} VERSIONS = 6,7,8,9
+# oracle-{VERSION} = VERSIONS 8,9
+java_version: "default"
+
+
+default: False

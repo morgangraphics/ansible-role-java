@@ -1,0 +1,91 @@
+---
+
+# # Default (OpenJDK)
+# - name: Update the Apt repo
+#   apt:
+#     update_cache: yes
+#   become: true
+#
+# - name: Install default-jre
+#   apt:
+#     name: default-jre
+#     force: yes
+#   when: '(install_type == "jre") and (java_version | length == 0)'
+#   become: true
+#
+# - name: Install default-jdk
+#   apt:
+#     name: default-jdk
+#     force: yes
+#   when: '(install_type == "jdk") and (java_version | length == 0)'
+#   become: true
+#
+# # Oracle JDK
+# - block:
+#
+#   - name: Add Oracle PPA
+#     apt_repository:
+#       repo: 'ppa:webupd8team/java'
+#       state: present
+#       update_cache: yes
+#     become: true
+#
+#   - name: Accept Java License
+#     debconf:
+#       name: "oracle-java{{ java_version.split('-')[1] }}-installer"
+#       question: "shared/accepted-oracle-license-v1-1"
+#       value: "true"
+#       vtype: "select"
+#     become: true
+#
+#   - name: Install Oracle JDK
+#     apt:
+#       name: oracle-java{{ java_version.split('-')[1] }}-installer
+#       force: yes
+#       install_recommends: yes
+#     become: true
+#
+#   when: '(java_version != "default") and ("oracle" in java_version)'
+#
+# # Open JDK
+# - block:
+#
+#   - name: Add OpenJDK PPA
+#     apt_repository:
+#       repo: 'ppa:openjdk-r/ppa'
+#       state: present
+#       update_cache: yes
+#     become: true
+#
+#   - name: Install Open JDK
+#     apt:
+#       name: openjdk-{{ java_version.split('-')[1] }}-{{install_type}}
+#       force: yes
+#       install_recommends: yes
+#     become: true
+#
+#   when: '(java_version != "default") and ("open" in java_version)'
+
+- block:
+
+  - name: Set Java Versions
+    set_fact:
+      jv_str: "java-{{java_version.split('-')[1]}}-{{java_version.split('-')[0]}}"
+
+  - name: List Matching Java Versions
+    shell: 'update-alternatives --list java | grep -e "{{ jv_str }}"'
+    register: default_java_version
+
+  - name: Set Default Java Version
+    shell: 'update-alternatives --set java {{ default_java_version.stdout }}'
+    become: true
+
+  when: default == True
+
+
+
+  #expect:
+  #  command: 'update-alternatives --config java'
+  #  responses: stdout.(\d)(.*?java-8-oracle.+?)\s
+  #become: true
+  #(\d)(.*?java-8-oracle.+?)\s
