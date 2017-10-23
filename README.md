@@ -105,9 +105,11 @@ Defaulted Version of Java
     default: False
 
 Set JAVA_HOME variable
+
     default: True
 
 Add JAVA_HOME to PATH
+
     default: True
 
 
