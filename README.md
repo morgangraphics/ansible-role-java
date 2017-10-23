@@ -45,7 +45,7 @@ e.g. `oracle-8` or `openjdk-9`
     # Installs openjdk-8-jdk
     - role: ansible-role-java
       install_type: "jdk"
-
+      java_home: true
 
 ```
 #### More Complex
@@ -104,9 +104,14 @@ Defaulted Version of Java
 
     default: False
 
+Set JAVA_HOME variable
+    default: True
+
+Add JAVA_HOME to PATH
+    default: True
+
 
 ## TODO:
-1. Set JAVA_HOME variable https://www.digitalocean.com/community/tutorials/how-to-install-java-on-ubuntu-with-apt-get
 1. RedHat Install
 http://openjdk.java.net/install/index.html
 
