@@ -45,7 +45,7 @@ e.g. `oracle-8` or `openjdk-9`
     # Installs openjdk-8-jdk
     - role: ansible-role-java
       install_type: "jdk"
-      java_home: true
+      java_home: False
 
 ```
 #### More Complex
