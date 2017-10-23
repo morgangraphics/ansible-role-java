@@ -10,5 +10,24 @@ install_type: "jre"
 # oracle-{VERSION} = VERSIONS 8,9
 java_version: "default"
 
+# Set the JAVA_HOME variable
+java_home: True
 
-default: False
+# Path to set JAVA_HOME variable
+# Options are:
+# /etc/environment
+# .bashrc
+java_home_path: /etc/environment
+
+# Java Paths are usually symbolically linked i.e $which java = /usr/bin/java
+# This role just grabs the true base path i.e. /usr/lib/jvm/java-8-openjdk-amd64
+# if $JAVA_HOME requires that you need to point to /bin
+# i.e. /usr/lib/jvm/java-8-openjdk-amd64/bin/ add "/bin" here
+java_home_path_suffix: ""
+
+# Adds $JAVA_HOME to the $PATH variable
+update_path: True
+
+# Debian Installations use update-alternatives to manage different version of JAVA
+# Set default Java Version
+set_ua_default: False

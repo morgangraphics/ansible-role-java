@@ -105,6 +105,11 @@ Defaulted Version of Java
     default: False
 
 
+## TODO:
+1. Set JAVA_HOME variable https://www.digitalocean.com/community/tutorials/how-to-install-java-on-ubuntu-with-apt-get
+1. RedHat Install
+http://openjdk.java.net/install/index.html
+
 ## Dependencies
 
 None.
