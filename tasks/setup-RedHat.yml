@@ -1,70 +1,127 @@
 ---
+# which package manager?
 
-# Default (OpenJDK)
-- name: Update the Yum repo
-  yum:
-    update_cache: yes
-  become: true
+- block:
+  - name: Figure out what package manager is being used
+    command: "yum --version"
+    register: cmd
 
-- name: Install default-jre
-  yum:
-    name: default-jre
-    force: yes
-  when: '(install_type == "jre") and (java_version == "default")'
-  become: true
+  - name: Determine if install type DNF
+    set_fact:
+      pm: 'dnf'
+    when: "'/dnf' in cmd.stderr"
 
-- name: Install default-jdk
-  yum:
-    name: default-jdk
-    force: yes
-  when: '(install_type == "jdk") and (java_version == "default")'
-  become: true
+  - name: Determine if package manager is YUM
+    set_fact:
+      pm: 'yum'
+    when: "('redirecting' not in cmd.stderr.lower())"
+
+  - name: Reassign install_type when needed for JRE
+    set_fact:
+      rh_install_type: ''
+    when: 'install_type == "jre"'
+
+  - name: Reassign install_type when needed for JDK
+    set_fact:
+      rh_install_type: '-devel'
+    when: "install_type == 'jdk'"
+
+  - name: Check if libselinux-python installed
+    command: "{{ pm }} list installed libselinux-python"
+    register: libselinux
+    ignore_errors: True
+
+  - name : Install packages for libselinux-python
+    package:
+      name: libselinux-python
+      state: present
+    become: true
+    when: "'no matching packages' in libselinux.stderr.lower()"
+
+# DNF is the default Package manager on nerwer versions of RHEL
+- block:
+
+
+
+  - name: upgrade all packages
+    dnf:
+      name: "*"
+      state: latest
+    become: true
+    when: 'system_update == True'
+
+  - name: Install default-jre
+    dnf:
+      name: jre
+    become: true
+    when: '(install_type == "jre") and (java_version == "default")'
+
+  - name: Install default-jdk
+    dnf:
+      name: java
+    become: true
+    when: '(install_type == "jdk") and (java_version == "default")'
+
+  # Open JDK
+  - block:
+
+    - name: Install Open JDK
+      dnf:
+        name: java-1.{{ java_version.split('-')[1] }}.0-openjdk{{rh_install_type}}
+      become: true
+
+    when: '(java_version != "default") and ("open" in java_version) and (java_version.split("-")[1] | int > 7)'
+
+  when: 'pm == "dnf"'
+
+
+# Yum is the default Package manager on older RHEL and CentOS
+- block:
+
+  # Default (OpenJDK)
+  - name: Update the Yum repo
+    yum:
+      name: "*"
+      state: latest
+    become: true
+    when: 'system_update == True'
+
+  - name: Install default-jre
+    yum:
+      name: java
+      state: present
+    become: true
+    when: '(install_type == "jre") and (java_version == "default")'
+
+  # Doesn't seem to be any default JDK nomenclature so we do it directly
+  - name: Install default-jdk
+    yum:
+      name: java-1.8.0-openjdk-devel
+      state: present
+    become: true
+    when: '(install_type == "jdk") and (java_version == "default")'
+
+
+  # Open JDK
+  - block:
+
+    - name: Install Open JDK
+      yum:
+        name: java-1.{{ java_version.split('-')[1] }}.0-openjdk{{rh_install_type}}
+      become: true
+
+    when: '(java_version != "default") and ("open" in java_version)'
+
+  when: 'pm == "yum"'
+
 
 # Oracle JDK
-- block:
+# - block:
+#   - name: TODO
+#
+#
+#   when: '(java_version != "default") and ("oracle" in java_version)'
 
-  - name: Add Oracle PPA
-    apt_repository:
-      repo: 'ppa:webupd8team/java'
-      state: present
-      update_cache: yes
-    become: true
-
-  - name: Accept Java License
-    debconf:
-      name: "oracle-java{{ java_version.split('-')[1] }}-installer"
-      question: "shared/accepted-oracle-license-v1-1"
-      value: "true"
-      vtype: "select"
-    become: true
-
-  - name: Install Oracle JDK
-    yum:
-      name: oracle-java{{ java_version.split('-')[1] }}-installer
-      force: yes
-      install_recommends: yes
-    become: true
-
-  when: '(java_version != "default") and ("oracle" in java_version)'
-
-# Open JDK
-- block:
-
-  - name: Add OpenJDK PPA
-    apt_repository:
-      repo: 'ppa:openjdk-r/ppa'
-      state: present
-      update_cache: yes
-    become: true
-
-  - name: Install Open JDK
-    apt:
-      name: openjdk-{{ java_version.split('-')[1] }}-{{install_type}}
-      force: yes
-      install_recommends: yes
-    become: true
-
-  when: '(java_version != "default") and ("open" in java_version)'
 
 # Set Default Java Version
 - block:
@@ -82,3 +139,36 @@
     become: true
 
   when: set_ua_default == True
+
+# Set JAVA_HOME variable
+- name: Get Current JAVA path
+  shell: 'readlink -f /usr/bin/java | sed "s:/jre/bin/java::"'
+  register: jhp
+
+- name: Set JAVA HOME variable
+  lineinfile:
+    insertbefore: BOF
+    path: '{{ java_home_path }}'
+    state: present
+    regexp: '^JAVA_HOME'
+    line: 'JAVA_HOME={{ jhp.stdout }}{{java_home_path_suffix}}'
+  become: true
+  when: java_home == True
+
+- name: Update path
+  lineinfile:
+    dest: '{{ java_home_path }}'
+    state: present
+    backrefs: yes
+    regexp: 'PATH=(["]*)((?!.*?$JAVA_HOME).*?)(["]*)$'
+    line: 'PATH=\1\2:$JAVA_HOME\3'
+  become: true
+  when: '(update_path == True) and (java_home == True)'
+
+# Cleanup
+- name : Remove packages for libselinux-python
+  package:
+    name: libselinux-python
+    state: removed
+  become: true
+  when: "'no matching packages' in libselinux.stderr.lower()"

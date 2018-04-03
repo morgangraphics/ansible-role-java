@@ -1,7 +1,15 @@
 # Ansible Role: Java
 
-Installs JAVA on Debian/Ubuntu and RHEL/CentOS (Coming Soon)
+Installs JAVA on Debian/Ubuntu and RHEL/CentOS
 
+
+The purpose of this Role is to leave the default OS as intact as possible. As a result there are things that are installed used and then uninstalled or not installed at all to preserve that methodology.
+
+
+I try to preserve backwards compatibility wherever possible as long as it makes sense. For example, RedHat's new Package manager DNF could be switched to YUM to install OpenJDK 1.7. However, that violates the purpose of the methodology to leave the default OS intact. As a result I drop support for OpenJDK 1.7 on newer versions  of RedHat because that is what RedHat does. However, older versions of RedHat are covered as long as YUM is the default Package Manager.
+
+
+## Unsupported Java versions
 Support for Oracle Java 6 and 7 were removed from public download in June of 2017.
 This means you need a Oracle support contract to get access to them.
 
@@ -17,11 +25,34 @@ The Oracle JRE versions of Java change frequently and require manual download an
 
 ## Supported Java versions
 
+### Ubuntu
 |             | JDK     | JRE     |
 |-------------|---------|---------|
-| **Oracle**  | 7,8,9   |         |
+| **Oracle**  | 8,9     |         |
 | **OpenJDK** | 6,7,8,9 | 6,7,8,9 |
 
+
+### RHEL DNF (Fedora 21 +)
+|             | JDK     | JRE     |
+|-------------|---------|---------|
+| **Oracle**  | 8,9     |         |
+| **OpenJDK** | 8,9     | 8,9     |
+
+
+### RHEL/CentOS YUM
+|             | JDK     | JRE     |
+|-------------|---------|---------|
+| **Oracle**  | 8,9     |         |
+| **OpenJDK** | 6,7,8,9 | 6,7,8,9 |
+
+
+```
+- role: ansible-role-java
+  install_type: jdk
+  java_version: openjdk-7
+```
+
+Will not work for RedHat (Fedora > 21). However, it is still perfectly valid for CentOS and older versions of RedHat (Fedora < 21)
 
 
 ## Example Playbooks
@@ -77,19 +108,25 @@ e.g. `oracle-8` or `openjdk-9`
 
 This role runs as `root` user
 
-Just including the role will install **openjdk-8-jre** by default. This should suffice for most applications.
+Just including the role will install **openjdk-8-jre** by default. **This should suffice for most applications**.
 
-Any Oracle versions of Java are **JDK** by default (JDK also includes includes JRE)
+Any Oracle versions of Java are **JDK** by default (JDK also includes JRE)
 
 If installing multiple versions of Java, last one installed is set as default unless specified
 
-`openjdk-6` is not supported on Ubuntu 16.04 Xenial
+`openjdk-6` is not supported on Ubuntu 16.04 Xenial or RHEL Fedora 21+
+`openjdk-7` is not supported on RHEL Fedora 21+
 
 
 
 ## Role Variables
 
 Available variables are listed below, along with default values see [defaults/main.yml]( defaults/main.yml)
+
+Run System Update before Install
+*It is recommended that this be set to True, however, if you do this as part of another step this can be False*
+
+    system_update: True
 
 The Java type version to install. Options are `jre` or `jdk`
 
@@ -114,8 +151,8 @@ Add JAVA_HOME to PATH
 
 
 ## TODO:
-1. RedHat Install
-http://openjdk.java.net/install/index.html
+1. RedHat Oracle Install
+https://github.com/ansiblebit/oracle-java/blob/master/tasks/redhat/main.yml
 
 ## Dependencies
 

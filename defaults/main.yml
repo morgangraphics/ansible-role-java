@@ -1,4 +1,9 @@
 ---
+# Run System Update before Install
+# It is recommended that this be set to True, however, if you do
+# this as part of another step this can be False
+system_update: True
+
 # JRE or JDK
 # JDK has a larger footprint therefore jre is the default
 install_type: "jre"

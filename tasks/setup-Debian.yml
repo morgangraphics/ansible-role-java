@@ -5,20 +5,22 @@
   apt:
     update_cache: yes
   become: true
+  when: 'system_update == True'
 
 - name: Install default-jre
   apt:
     name: default-jre
     force: yes
-  when: '(install_type == "jre") and (java_version == "default")'
   become: true
+  when: '(install_type == "jre") and (java_version == "default")'
 
 - name: Install default-jdk
   apt:
     name: default-jdk
     force: yes
-  when: '(install_type == "jdk") and (java_version == "default")'
   become: true
+  when: '(install_type == "jdk") and (java_version == "default")'
+
 
 # Oracle JDK
 - block:
@@ -84,7 +86,6 @@
   when: set_ua_default == True
 
 # Set JAVA_HOME variable
-
 - name: Get Current JAVA path
   shell: 'readlink -f /usr/bin/java | sed "s:/jre/bin/java::"'
   register: jhp
