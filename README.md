@@ -5,8 +5,7 @@ Installs JAVA on Debian/Ubuntu and RHEL/CentOS
 
 The purpose of this Role is to leave the default OS as intact as possible. As a result there are things that are installed used and then uninstalled or not installed at all to preserve that methodology.
 
-
-I try to preserve backwards compatibility wherever possible as long as it makes sense. For example, RedHat's new Package manager DNF could be switched to YUM to install OpenJDK 1.7. However, that violates the purpose of the methodology to leave the default OS intact. As a result I drop support for OpenJDK 1.7 on newer versions  of RedHat because that is what RedHat does. However, older versions of RedHat are covered as long as YUM is the default Package Manager.
+I try to preserve backwards compatibility wherever possible as long as it makes sense. For example, RedHat's new Package manager DNF could be switched to YUM to install OpenJDK 1.7. However, that violates the purpose of the methodology to leave the default OS intact. As a result I drop support for OpenJDK 1.7 on newer versions of RedHat because that is the default action RedHat takes. However, older versions of RedHat and/or AWS Flavors of Linux are covered as long as YUM is the default Package Manager.
 
 
 ## Unsupported Java versions
@@ -26,24 +25,24 @@ The Oracle JRE versions of Java change frequently and require manual download an
 ## Supported Java versions
 
 ### Ubuntu
-|             | JDK     | JRE     |
-|-------------|---------|---------|
-| **Oracle**  | 8,9     |         |
-| **OpenJDK** | 6,7,8,9 | 6,7,8,9 |
+|             | JDK      | JRE      |
+|-------------|----------|----------|
+| **Oracle**  | 8,9      |          |
+| **OpenJDK** | 6,7,8,9+ | 6,7,8,9+ |
 
 
 ### RHEL DNF (Fedora 21 +)
 |             | JDK     | JRE     |
 |-------------|---------|---------|
 | **Oracle**  | 8,9     |         |
-| **OpenJDK** | 8,9     | 8,9     |
+| **OpenJDK** | 8,9+    | 8,9+    |
 
 
 ### RHEL/CentOS YUM
-|             | JDK     | JRE     |
-|-------------|---------|---------|
-| **Oracle**  | 8,9     |         |
-| **OpenJDK** | 6,7,8,9 | 6,7,8,9 |
+|             | JDK      | JRE      |
+|-------------|----------|----------|
+| **Oracle**  | 8,9      |          |
+| **OpenJDK** | 6,7,8,9+ | 6,7,8,9+ |
 
 
 ```
@@ -52,7 +51,7 @@ The Oracle JRE versions of Java change frequently and require manual download an
   java_version: openjdk-7
 ```
 
-Will not work for RedHat (Fedora > 21). However, it is still perfectly valid for CentOS and older versions of RedHat (Fedora < 21)
+The above **WILL NOT** work for RedHat (Fedora > 21). However, it is still perfectly valid for CentOS and older versions of RedHat (Fedora < 21)
 
 
 ## Example Playbooks
@@ -108,7 +107,7 @@ e.g. `oracle-8` or `openjdk-9`
 
 This role runs as `root` user
 
-Just including the role will install **openjdk-8-jre** by default. **This should suffice for most applications**.
+This role takes advantage of APT/DF/YUM default JAVA repository version for the version of the OS you are using; meaning just including the role will install **openjdk-8-jre** by default. **This should suffice for most applications** unless, for example, the default JAVA repository version is `openjdk-9-jre` for your OS.
 
 Any Oracle versions of Java are **JDK** by default (JDK also includes JRE)
 
