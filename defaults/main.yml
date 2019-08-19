@@ -1,0 +1,39 @@
+---
+# Run System Update before Install
+# It is recommended that this be set to True, however, if you do
+# this as part of another step this can be False
+system_update: true
+
+# JRE or JDK
+# JDK has a larger footprint therefore jre is the default
+install_type: "jre"
+
+# Version of Java to install
+# Options are:
+# default (OpenJDK-8)
+# openjdk-{VERSION} VERSIONS = 6,7,8,9
+# oracle-{VERSION} = VERSIONS 8,9
+java_version: "default"
+
+# Set the JAVA_HOME variable
+java_home: true
+
+# Path to set JAVA_HOME variable
+# Options are:
+# /etc/environment
+# ./.bashrc
+# /etc/profile.d/<YOUR SCRIPT NAME>.sh
+java_home_path: /etc/environment
+
+# Java Paths are usually symbolically linked i.e $which java = /usr/bin/java
+# This role just grabs the true base path i.e. /usr/lib/jvm/java-8-openjdk-amd64
+# if $JAVA_HOME requires that you need to point to /bin
+# i.e. /usr/lib/jvm/java-8-openjdk-amd64/bin/ add "/bin" here
+java_home_path_suffix: ""
+
+# Adds $JAVA_HOME to the $PATH variable
+update_path: True
+
+# Debian Installations use update-alternatives to manage different version of JAVA
+# Set default Java Version
+set_ua_default: False

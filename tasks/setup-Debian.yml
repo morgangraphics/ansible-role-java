@@ -1,0 +1,138 @@
+---
+
+# Default (OpenJDK)
+- name: Update the Apt repo
+  apt:
+    update_cache: yes
+  become: true
+  when: "system_update == true"
+
+- name: Install default-jre
+  apt:
+    name: default-jre
+    force: yes
+  become: true
+  when: '(install_type == "jre") and (java_version == "default")'
+
+- name: Install default-jdk
+  apt:
+    name: default-jdk
+    force: yes
+  become: true
+  when: '(install_type == "jdk") and (java_version == "default")'
+
+
+# Oracle JDK
+- block:
+
+  - name: Add Oracle PPA
+    apt_repository:
+      repo: 'ppa:webupd8team/java'
+      state: present
+      update_cache: yes
+    become: true
+
+  - name: Accept Java License
+    debconf:
+      name: "oracle-java{{ java_version.split('-')[1] }}-installer"
+      question: "shared/accepted-oracle-license-v1-1"
+      value: "true"
+      vtype: "select"
+    become: true
+
+  - name: Install Oracle JDK
+    apt:
+      name: oracle-java{{ java_version.split('-')[1] }}-installer
+      force: yes
+      install_recommends: yes
+    become: true
+
+  when: '(java_version != "default") and ("oracle" in java_version)'
+
+# Open JDK
+- block:
+
+  - name: Add OpenJDK PPA
+    apt_repository:
+      repo: "ppa:openjdk-r/ppa"
+      state: present
+      update_cache: yes
+    become: true
+
+  - name: Install Open JDK
+    apt:
+      name: openjdk-{{ java_version.split('-')[1] }}-{{install_type}}
+      force: yes
+      install_recommends: yes
+    become: true
+
+  when: '(java_version != "default") and ("open" in java_version)'
+
+# Set Default Java Version
+- block:
+
+  - name: Set Java Versions
+    set_fact:
+      jv_str: "java-{{java_version.split('-')[1]}}-{{java_version.split('-')[0]}}"
+
+  - name: List Matching Java Versions
+    shell: 'update-alternatives --list java | grep -e "{{ jv_str }}"'
+    register: default_java_version
+
+  - name: Set Default Java Version
+    shell: "update-alternatives --set java {{ default_java_version.stdout }}"
+    become: true
+
+  when: set_ua_default == true
+
+# Set JAVA_HOME variable
+- name: Get Current JAVA path
+  shell: 'readlink -f /usr/bin/java | sed "s:/jre/bin/java::"'
+  register: jhp
+
+- name: "Create file in {{ java_home_path }} if it doesn't exist"
+  file:
+    path: '{{ java_home_path }}'
+    state: touch
+    mode: '0755'
+  become: true
+  when: '(java_home == true) and (".sh" in java_home_path)'
+
+- name: "Set $JAVA_HOME variable in {{ java_home_path }} folder"
+  blockinfile:
+    block: |
+      export JAVA_HOME={{ jhp.stdout }}{{java_home_path_suffix}}
+    dest: "{{ java_home_path }}"
+    backup: yes
+    state: present
+    insertbefore: BOF
+  become: true
+  when: '(java_home == true) and (".sh" in java_home_path)'
+
+- name: "Set $JAVA_HOME variable in {{ java_home_path }}"
+  lineinfile:
+    insertbefore: BOF
+    path: '{{ java_home_path }}'
+    state: present
+    regexp: '^JAVA_HOME'
+    line: 'JAVA_HOME={{ jhp.stdout }}{{java_home_path_suffix}}'
+  become: true
+  when: '(java_home == true) and (".sh" not in java_home_path)'
+
+- name: Update path
+  lineinfile:
+    dest: '{{ java_home_path }}'
+    state: present
+    backrefs: yes
+    regexp: 'PATH=(["]*)((?!.*?$JAVA_HOME).*?)(["]*)$'
+    line: 'PATH=\1\2:$JAVA_HOME\3'
+  become: true
+  when: '(update_path == true) and (java_home == true) and (".sh" not in java_home_path)'
+
+  # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/983302
+- name: Fix anything that might be set up incorrectly
+  command: 'update-ca-certificates'
+  become: true
+
+- name: Source Command Java Home Destination Path
+  shell: "echo $JAVA_HOME"
