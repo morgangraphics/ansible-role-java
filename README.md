@@ -95,7 +95,7 @@ e.g. `oracle-8` or `openjdk-9`
     - role: ansible-role-java
       install_type: "jdk"
       java_version: "openjdk-8"
-      default: True
+      default: true
 
     - role: ansible-role-java
       java_version: "openjdk-9"
@@ -116,6 +116,26 @@ If installing multiple versions of Java, last one installed is set as default un
 `openjdk-6` is not supported on Ubuntu 16.04 Xenial or RHEL Fedora 21+
 `openjdk-7` is not supported on RHEL Fedora 21+
 
+[Ubuntu Environment Variables](https://help.ubuntu.com/community/EnvironmentVariables) are a little tricky
+
+`.bashrc` file is run each time a **user** logs in which is fine for most applications where a user interacts with a machine.
+
+  ```bash
+  export JAVA_HOME=/usr/lib/jvm/jdk1.8.0
+  ```
+
+`/etc/environment` is a system wide file that isn't tied to a specific user, **however** it **WILL NOT** allow for variable expansion e.g. `$HOME` and must be declared with an absolute path e.g. `JAVA_HOME=/usr/lib/jvm/jdk1.8.0`.
+
+  ```bash
+  JAVA_HOME=/usr/lib/jvm/jdk1.8.0
+  ```
+
+When you need something a little more flexible adding a `<YOUR SCRIPT NAME>.sh` script to `/etc/profile.d/` directory works equally well. **However**, you must explicitly define the script path including name.
+
+  ```bash
+  export JAVA_HOME=/usr/lib/jvm/jdk1.8.0
+  export PATH=$PATH:$JAVA_HOME/bin
+  ```
 
 
 ## Role Variables
@@ -123,9 +143,9 @@ If installing multiple versions of Java, last one installed is set as default un
 Available variables are listed below, along with default values see [defaults/main.yml]( defaults/main.yml)
 
 Run System Update before Install
-*It is recommended that this be set to True, however, if you do this as part of another step this can be False*
+*It is recommended that this be set to true, however, if you do this as part of another step this can be false*
 
-    system_update: True
+    system_update: true
 
 The Java type version to install. Options are `jre` or `jdk`
 
@@ -133,20 +153,25 @@ The Java type version to install. Options are `jre` or `jdk`
 
 Java version to install
 
+Options are: `default (openjdk-8)`, `openjdk-6`, `openjdk-7`, `openjdk-8`, `openjdk-9`, `oracle-8`, `oracle-9`
+
     java_version: "default"
 
 
-Defaulted Version of Java
+Set default version of Java when installing multiple versions
 
-    default: False
+    default: false
 
-Set JAVA_HOME variable
+Set `$JAVA_HOME` Environment variable on the system
 
-    default: True
+    java_home: true
 
-Add JAVA_HOME to PATH
+Location to set the `$JAVA_HOME` Environment variable at path or in script file
 
-    default: True
+Options are:
+`/etc/environment`, `.bashrc`, or `/etc/profile.d/<YOUR SCRIPT NAME>.sh`
+
+    java_home_path: /etc/environment
 
 
 ## TODO:

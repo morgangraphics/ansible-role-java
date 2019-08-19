@@ -5,7 +5,7 @@
   apt:
     update_cache: yes
   become: true
-  when: 'system_update == True'
+  when: "system_update == true"
 
 - name: Install default-jre
   apt:
@@ -36,8 +36,8 @@
     debconf:
       name: "oracle-java{{ java_version.split('-')[1] }}-installer"
       question: "shared/accepted-oracle-license-v1-1"
-      value: 'true'
-      vtype: 'select'
+      value: "true"
+      vtype: "select"
     become: true
 
   - name: Install Oracle JDK
@@ -54,7 +54,7 @@
 
   - name: Add OpenJDK PPA
     apt_repository:
-      repo: 'ppa:openjdk-r/ppa'
+      repo: "ppa:openjdk-r/ppa"
       state: present
       update_cache: yes
     become: true
@@ -80,17 +80,36 @@
     register: default_java_version
 
   - name: Set Default Java Version
-    shell: 'update-alternatives --set java {{ default_java_version.stdout }}'
+    shell: "update-alternatives --set java {{ default_java_version.stdout }}"
     become: true
 
-  when: set_ua_default == True
+  when: set_ua_default == true
 
 # Set JAVA_HOME variable
 - name: Get Current JAVA path
   shell: 'readlink -f /usr/bin/java | sed "s:/jre/bin/java::"'
   register: jhp
 
-- name: Set JAVA HOME variable
+- name: "Create file in {{ java_home_path }} if it doesn't exist"
+  file:
+    path: '{{ java_home_path }}'
+    state: touch
+    mode: '0755'
+  become: true
+  when: '(java_home == true) and (".sh" in java_home_path)'
+
+- name: "Set $JAVA_HOME variable in {{ java_home_path }} folder"
+  blockinfile:
+    block: |
+      export JAVA_HOME={{ jhp.stdout }}{{java_home_path_suffix}}
+    dest: "{{ java_home_path }}"
+    backup: yes
+    state: present
+    insertbefore: BOF
+  become: true
+  when: '(java_home == true) and (".sh" in java_home_path)'
+
+- name: "Set $JAVA_HOME variable in {{ java_home_path }}"
   lineinfile:
     insertbefore: BOF
     path: '{{ java_home_path }}'
@@ -98,7 +117,7 @@
     regexp: '^JAVA_HOME'
     line: 'JAVA_HOME={{ jhp.stdout }}{{java_home_path_suffix}}'
   become: true
-  when: java_home == True
+  when: '(java_home == true) and (".sh" not in java_home_path)'
 
 - name: Update path
   lineinfile:
@@ -108,4 +127,12 @@
     regexp: 'PATH=(["]*)((?!.*?$JAVA_HOME).*?)(["]*)$'
     line: 'PATH=\1\2:$JAVA_HOME\3'
   become: true
-  when: '(update_path == True) and (java_home == True)'
+  when: '(update_path == true) and (java_home == true) and (".sh" not in java_home_path)'
+
+  # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/983302
+- name: Fix anything that might be set up incorrectly
+  command: 'update-ca-certificates'
+  become: true
+
+- name: Source Command Java Home Destination Path
+  shell: "echo $JAVA_HOME"
