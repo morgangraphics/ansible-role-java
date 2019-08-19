@@ -2,7 +2,7 @@
 # Run System Update before Install
 # It is recommended that this be set to True, however, if you do
 # this as part of another step this can be False
-system_update: True
+system_update: true
 
 # JRE or JDK
 # JDK has a larger footprint therefore jre is the default
@@ -16,12 +16,13 @@ install_type: "jre"
 java_version: "default"
 
 # Set the JAVA_HOME variable
-java_home: True
+java_home: true
 
 # Path to set JAVA_HOME variable
 # Options are:
 # /etc/environment
-# .bashrc
+# ./.bashrc
+# /etc/profile.d/<YOUR SCRIPT NAME>.sh
 java_home_path: /etc/environment
 
 # Java Paths are usually symbolically linked i.e $which java = /usr/bin/java
